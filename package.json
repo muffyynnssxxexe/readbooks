@@ -2,10 +2,10 @@
   "name": "readbooks",
   "version": "1.0.0",
   "private": true,
-  "description": "READBOOKS – read with me",
+  "description": "READBOOKS - read with me",
   "scripts": {
-    "vendor": "node scripts/vendor.js",
-    "build": "node scripts/vendor.js && node scripts/make-config.js"
+    "vendor": "node script/vendor.js",
+    "build": "node script/vendor.js && node script/make-config.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.45.4",
