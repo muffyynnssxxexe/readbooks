@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>READBOOKS – read with me</title>
+<meta name="description" content="READBOOKS lets you upload a book as a PDF, read it, and put a bookmark in so you can easily go back to where you left off. For people who want to keep their online reading easy and fun.">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="READBOOKS – read with me">
+<meta property="og:description" content="Upload a PDF book, read it, and bookmark your place so you can pick up where you left off.">
+<meta name="theme-color" content="#42634f">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#app">Skip to content</a>
+<header class="top">
+  <h1>READBOOKS<small>read with me</small></h1>
+  <nav class="menu" id="menu" aria-label="Main"></nav>
+</header>
+<div id="net" class="netbar" role="status" hidden>You're offline. Your reading place will save when you're back online.</div>
+<main id="app" tabindex="-1" aria-live="polite"></main>
+<noscript><p style="padding:20px">READBOOKS needs JavaScript turned on to work.</p></noscript>
+<script src="vendor/pdf.min.js"></script>
+<script src="vendor/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "readbooks",
+  "version": "1.0.0",
+  "private": true,
+  "description": "READBOOKS – read with me",
+  "scripts": {
+    "vendor": "node scripts/vendor.js",
+    "build": "node scripts/vendor.js && node scripts/make-config.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.45.4",
+    "pdfjs-dist": "3.11.174"
+  }
+}
