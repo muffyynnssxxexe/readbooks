@@ -307,18 +307,19 @@ function pdfErrText(err){
   return "We couldn't open this PDF. Try another file.";
 }
 function openReader(id){ leaveReader(); route="reader"; notice=null; R={id,doc:null,page:1,zoom:0,task:null,gen:0}; render(); app.focus(); window.scrollTo(0,0); }
-function leaveReader(){ flushPos(true); if(R){ try{R.task&&R.task.cancel();}catch(e){} try{R.doc&&R.doc.destroy();}catch(e){} R=null; } clearTimeout(posTimer); }
+function leaveReader(){ document.body.classList.remove("noscroll"); if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); flushPos(true); if(R){ try{R.task&&R.task.cancel();}catch(e){} try{R.doc&&R.doc.destroy();}catch(e){} R=null; } clearTimeout(posTimer); }
 function reader(){
   const b=R&&books.find(x=>x.id===R.id);
   if(!b) return `<section class="card"><div class="empty"><p><strong>We couldn't find that book.</strong></p><button class="btn" id="back0">Back to my books</button></div></section>`;
   return steps(3)+`<section class="card"><div class="row"><h2 style="margin:0;flex:1 1 200px;overflow-wrap:anywhere">${esc(b.title)}</h2><button class="btn alt" id="back" style="flex:0 0 auto">Back to my books</button></div></section>
   <div id="rmsg"></div>
-  <div class="reader"><div>
+  <div class="reader"><div id="rwrap">
     <div class="ctrl" role="group" aria-label="Page controls">
       <button class="btn alt" id="prev" aria-label="Previous page">◀ Back</button>
       <label class="sr" for="pg">Page number</label><input id="pg" type="number" min="1" value="${b.last_page}" inputmode="numeric"><span id="of" aria-live="polite"></span>
       <button class="btn alt" id="next" aria-label="Next page">Next ▶</button>
       <button class="btn alt" id="zo" aria-label="Zoom out">−</button><button class="btn alt" id="zi" aria-label="Zoom in">+</button><button class="btn alt" id="zf">Fit width</button>
+      <button class="btn alt" id="fs">⛶ Full screen</button><button class="btn alt" id="addbm2" hidden>★ Bookmark</button>
     </div>
     <div class="stage" id="stage" tabindex="0" aria-label="Book page"><p class="hint" id="loading" role="status">Opening your book…</p><canvas id="cv" hidden></canvas></div>
     <p class="hint">Tip: use the left and right arrow keys to turn pages. Your page is saved automatically.</p>
@@ -348,8 +349,8 @@ async function bindReader(){
   $("prev").onclick=()=>showPage(R.page-1); $("next").onclick=()=>showPage(R.page+1);
   $("pg").onchange=()=>showPage(parseInt(val("pg"),10));
   $("zi").onclick=()=>zoom(1.2); $("zo").onclick=()=>zoom(1/1.2); $("zf").onclick=()=>{R.zoom=0;draw();};
-  $("stage").onkeydown=e=>{ if(e.key==="ArrowRight"){e.preventDefault();showPage(R.page+1);} if(e.key==="ArrowLeft"){e.preventDefault();showPage(R.page-1);} };
-  $("addbm").onclick=async()=>{
+  $("fs").onclick=()=>setFull(!$("rwrap").classList.contains("full"));
+  const addBm=async()=>{
     if(!R||!R.doc) return;
     if(bmList.some(m=>m.page===R.page)) return showMsg("info","This page is already bookmarked.","rmsg");
     const note=val("bml").trim().slice(0,60);
@@ -358,6 +359,7 @@ async function bindReader(){
     await sb.from("history").insert({book_id:b.id,type:"bookmark",page:R.page});
     bmList.push(data); $("bml").value=""; drawBms(); showMsg("ok",`Bookmarked page ${R.page}.`,"rmsg");
   };
+  $("addbm").onclick=addBm; $("addbm2").onclick=addBm;
   const my=R, ld=$("loading");
   try{
     await initPdf();
@@ -403,6 +405,22 @@ async function draw(){
   try{ await R.task.promise; }catch(e){ if(e&&e.name==="RenderingCancelledException") return; showMsg("err","This page couldn't be shown. Try another page.","rmsg"); }
   if(R===my&&gen===R.gen){ $("prev").disabled=R.page<=1; $("next").disabled=R.page>=R.doc.numPages; st.scrollTop=0; cv.setAttribute("aria-label",`Page ${R.page} of ${R.doc.numPages}`); }
 }
+function setFull(on){
+  const w=$("rwrap"); if(!w) return;
+  w.classList.toggle("full",on); document.body.classList.toggle("noscroll",on);
+  $("fs").textContent=on?"✕ Exit full screen":"⛶ Full screen"; $("addbm2").hidden=!on;
+  if(on&&w.requestFullscreen) w.requestFullscreen().catch(()=>{});   /* true full screen where the browser allows it; otherwise the page fills the window */
+  if(!on&&document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  setTimeout(()=>{ if(R&&R.doc) draw(); },150);
+}
+document.addEventListener("fullscreenchange",()=>{ const w=$("rwrap"); if(!document.fullscreenElement&&w&&w.classList.contains("full")) setFull(false); });
+document.addEventListener("keydown",e=>{
+  if(route!=="reader"||!R||!R.doc) return;
+  const t=e.target.tagName; if(t==="INPUT"||t==="TEXTAREA") return;
+  if(e.key==="ArrowRight"){ e.preventDefault(); showPage(R.page+1); }
+  else if(e.key==="ArrowLeft"){ e.preventDefault(); showPage(R.page-1); }
+  else if(e.key==="Escape"){ const w=$("rwrap"); if(w&&w.classList.contains("full")) setFull(false); }
+});
 window.addEventListener("resize",()=>{ if(route==="reader"&&R&&R.doc&&!R.zoom) draw(); });
 
 /* ---------- saving where you stopped ---------- */
